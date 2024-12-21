@@ -10,3 +10,14 @@ else if, show X on matrix,and the beeper will generate a long beep sound
 
 you can restart the game by pressing restart
 
+new function added:
+beeper
+pause
+restart
+
+
+
+
+
+reference:
+https://github.com/joe0411/final-1
