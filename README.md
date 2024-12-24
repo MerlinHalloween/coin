@@ -14,6 +14,7 @@ new function added:
 beeper
 pause
 restart
+different dificulty choice for 0.5X,1X,2X,4X(even 16X:in the code//)
 
 
 
