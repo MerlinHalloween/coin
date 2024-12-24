@@ -1,6 +1,6 @@
 # coin
 
-https://youtu.be/atA9PljkhF8
+[https://youtu.be/atA9PljkhF8](https://youtu.be/b9Tf317bIJk)
 
 this video shows the gaming demonstration
 the four bit button got (left)(right)(restart)(pause),four different state
