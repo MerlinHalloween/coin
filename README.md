@@ -18,6 +18,15 @@ different dificulty choice for 0.5X,1X,2X,4X(even 16X:in the code//)
 
 
 
+PS: i add extra lose state expression which is 
+LO
+SE
+in the drop_19 parameter
+the matrix coding should base on the rule:73516240
+when you write on the parameter,refer to my note pic
+
+
+
 
 
 reference:
