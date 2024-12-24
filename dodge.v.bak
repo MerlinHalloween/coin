@@ -1,11 +1,18 @@
 module dodge(
     output reg [7:0] R, G, B,
-    output reg [15:0] seconed,
+    output reg [7:0] seconed,
     output reg [3:0] COMM,
     output reg [0:7] SevenSeg,
     output reg buzzer,     // 新增蜂鳴器輸出
     input CLK,
-    input left,right
+    input left,right,
+	 input reset,
+	 input pause,  // 新增暫停訊號
+	 input speed_0_5x,      // 新增速度選擇按鍵
+    input speed_1x,
+    input speed_2x,
+    input speed_4x
+	 
 );
    parameter logic [7:0] Drop1 [7:0] = '{8'b11111111,
 														8'b11111110,
@@ -15,6 +22,8 @@ module dodge(
 														8'b11111110,
 														8'b11111110,
 														8'b11111111};
+														
+													
 	parameter logic [7:0] Drop2 [7:0] = '{8'b11111111,
 														8'b11111101,
 														8'b11111111,
@@ -152,15 +161,44 @@ module dodge(
 														8'b10111111,//2
 														8'b01111111,//4
 														8'b11100000};//0
-	
+														
 parameter logic [7:0] Drop19 [7:0] =  '{8'b01111110,//X
-														8'b11100111,
-														8'b11011011,
-														8'b10111101,
-														8'b10111101,
-														8'b11011011,
-														8'b11100111,
-														8'b01111110};
+													 8'b11100111,
+												  	 8'b11011011,
+												 	 8'b10111101,
+												 	 8'b10111101,
+													 8'b11011011,
+													 8'b11100111,
+													 8'b01111110};														
+														
+														
+										
+														
+														
+														
+														
+														
+														
+						/*											
+														
+											
+														
+	
+parameter logic [7:0] Drop19 [7:0] =  '{8'b01101001,//X
+													 8'b01101111,
+												  	 8'b00000110,
+												 	 8'b01010111,
+												 	 8'b01100110,
+													 8'b00100111,
+													 8'b11111000,
+													 8'b11110000};
+	
+
+			*/			
+	
+	
+	
+	
 	
 	parameter logic [7:0] Move [7:0] = '{8'b11111111,
 														8'b11111111,
@@ -355,196 +393,549 @@ parameter logic [7:0] Drop19 [7:0] =  '{8'b01111110,//X
 														8'b11111111,
 														8'b11111111,
 														8'b11111111};
-    // 新增蜂鳴器控制用的暫存旗標
-    reg success_flag;       
-    reg success_beep_done;  
+  
 
-    divfreq F0(CLK, CLK_div); 
-    CLK_one F1(CLK, CLK_1); 
-    CLK_two F2(CLK, CLK_2);
-	
-    byte num; 
-    int place; 
-    int Drop_num; 
-    int hit; 
-    int score; 
-    int touch1; 
-    int touch2; 
-    int touch3;
-    int touch4;
 
+
+
+ 
+
+
+
+  
+
+
+
+
+
+  // 狀態暫存變數
+    reg [7:0] SevenSeg_calc;
+    reg [3:0] place_next;
+    reg hit_next;
+    reg touch1_next;
+    reg touch2_next;
+    reg touch3_next;
+    reg touch4_next;
+	 
+	 
+	 reg [1:0] speed_select; // 00: 0.5x, 01: 1x, 10: 2x, 11: 4x
+	 
+	 
+	 
+	 // 定義分頻值寄存器
+	 reg [24:0] divfreq_val;
+	 reg [24:0] clk_two_val;
+	 
+	 // 去彈跳寄存器
+	 reg speed_0_5x_sync, speed_1x_sync, speed_2x_sync, speed_4x_sync;
+
+	 
+	 
+	 // 去彈跳邏輯
+always @(posedge CLK or posedge reset) begin
+    if (reset) begin
+        speed_0_5x_sync <= 0;
+        speed_1x_sync <= 0;
+        speed_2x_sync <= 0;
+        speed_4x_sync <= 0;
+    end else begin
+        speed_0_5x_sync <= speed_0_5x;
+        speed_1x_sync <= speed_1x;
+        speed_2x_sync <= speed_2x;
+        speed_4x_sync <= speed_4x;
+    end
+end
+
+
+
+
+// 設置速度選擇
+always @(posedge CLK or posedge reset) begin
+    if (reset) begin
+        speed_select <= 2'b01; // 默認1x
+    end else begin
+        if (speed_0_5x_sync)
+            speed_select <= 2'b00;
+        else if (speed_1x_sync)
+            speed_select <= 2'b01;
+        else if (speed_2x_sync)
+            speed_select <= 2'b10;
+        else if (speed_4x_sync)
+            speed_select <= 2'b11;
+    end
+end
+
+// 根據速度選擇設置分頻值
+always @(*) begin
+    case(speed_select)
+        2'b00: begin // 0.5x
+            divfreq_val = 50000;      // 分頻值加倍，速度減半50000
+            clk_two_val = 125000000;/////change to 0.2 x//125000000//////////////////////////////////////////////////////
+        end
+		  
+		  
+		  
+		  
+		  
+	/*	  speed man~~
+		  2'b00: begin // 0.2x 
+    divfreq_val = 125000;      // 分頻值加倍 2.5 倍，速度減至0.2x
+    clk_two_val = 1250000;     // 調整為1,250,000以適應25位元寄存器
+end
+		 */ 
+		  
+		  
+		  
+        2'b01: begin // 1x
+            divfreq_val = 10000;      // 原始分頻值
+            clk_two_val = 25000000;
+        end
+        2'b10: begin // 2x
+            divfreq_val = 5000;       // 分頻值減半，速度加倍
+            clk_two_val = 12500000;
+        end
+        2'b11: begin // 4x
+            divfreq_val = 2500;       // 分頻值減為四分之一，速度加4倍
+            clk_two_val = 6250000;
+        end
+    endcase
+end
+
+
+
+
+	 
+	/*
+	 reg phase;               // 0: 逐個熄滅階段, 1: 逐個亮起階段
+	 reg [3:0] shift_counter; // 4位計數器，計數0到7（用於八秒）
+	 */
+
+    // 時鐘分頻模組例化
+    divfreq F0(
+    .CLK(CLK),
+    .div_count(divfreq_val),
+    .CLK_div(CLK_div)
+);
+
+    CLK_two F2(
+    .CLK(CLK),
+    .div_count(clk_two_val),
+    .CLK_2(CLK_2)
+);
+
+
+    // 實例化其他時鐘分頻器（如 CLK_one）保持不變
+CLK_one F1(
+    .CLK(CLK),
+    .CLK_1(CLK_1)
+);
+
+
+
+    // 遊戲狀態變數
+    byte num;
+    reg [3:0] place;
+    int Drop_num;
+    reg hit;
+    int score;
+    reg touch1;
+    reg touch2;
+    reg touch3;
+    reg touch4;
+
+    // 初始狀態
     initial begin
-        place=3;
+        place_next = 3;
         num = 0;
         score = 0;
-        touch1 = 0;
-        touch2 = 0;
-        touch3 = 0;
-        touch4 = 0;
-        Drop_num=0;
-        hit=0;
+        touch1_next = 0;
+        touch2_next = 0;
+        touch3_next = 0;
+        touch4_next = 0;
+        Drop_num = 0;
+        hit_next = 0;
         G = 8'b11111111;
         B = 8'b11111111;
         R = 8'b11111111;
-        seconed = 16'b1111111111111111;
-        SevenSeg = 8'b00000010;
+        seconed = 8'b11111111;
+        SevenSeg_calc = 8'b00000010;
         buzzer = 0;
-        success_flag = 0;
-        success_beep_done = 0;
     end
-	
-	
+
+    
+	 
+	 
+	 
+    // CLK_div 掃描區塊
     always @(posedge CLK_div) begin
-        if(num >=7)
-            num <= 0;
-        else 
-            num <= num + 1;
-        COMM <= {num, 1'b1}; 			
-        if(place==7) R <= Move[num];
-        else if(place==3) R <= Move1[num];
-        else if(place==5) R <= Move2[num];
-        else if(place==1) R <= Move3[num];
-        else if(place==6) R <= Move4[num];
-        else if(place==2) R <= Move5[num];
-        else if(place==4) R <= Move6[num];
-        else if(place==0) R <= Move7[num];
-        else if(place==8) begin
-            R <= Move8[num];
-            B <= coin15[num];	
-        end	
 
-        if(Drop_num==0) G <= Drop1[num];
-        else if(Drop_num==1) begin G <= Drop2[num]; B <= coin1[num]; end
-        else if(Drop_num==2) begin G <= Drop3[num]; B <= coin2[num]; end
-        else if(Drop_num==3) begin G <= Drop4[num]; B <= coin3[num]; end
-        else if(Drop_num==4) begin G <= Drop5[num]; B <= coin4[num]; end
-        else if(Drop_num==5) begin G <= Drop6[num]; B <= coin5[num]; end
-        else if(Drop_num==6) begin G <= Drop7[num]; B <= coin6[num]; end
-        else if(Drop_num==7) begin
-            G <= Drop8[num]; B <= coin7[num];
-            if(place==5 || place==3 || place==4) hit <= 1;
-        end else if(Drop_num==8) begin
-            G <= Drop9[num]; B <= coin8[num];
-            if(place==2) begin 
-                touch1 <= 1;
-                SevenSeg = 8'b10011110;
-            end
-        end else if(Drop_num==9) begin
-            G <= Drop10[num]; B <= coin9[num];
-            if(place==5) begin 
-                touch4 <= 1;
-                if(touch1 == 1&&touch4 == 1) SevenSeg = 8'b00100100;
-                else SevenSeg = 8'b10011110;
-            end
-        end else if(Drop_num==10) begin
-            G <= Drop11[num]; B <= coin10[num];
-            if(place==5 || place==6 || place==7) hit <= 1;
-        end else if(Drop_num==11) begin
-            G <= Drop12[num]; B <= coin11[num];
-            if(place==3) begin 
-                touch2 <= 1;
-                if(touch1 == 0&&touch4 == 0) SevenSeg = 8'b10011110;
-                else if (touch1 == 1&&touch4 == 0) SevenSeg = 8'b00100100;
-                else if (touch1 == 0&&touch4 == 1) SevenSeg = 8'b00100100;
-                else SevenSeg = 8'b00001100;
-            end
-        end else if(Drop_num==12) begin
-            G <= Drop13[num]; B <= coin12[num];
-        end else if(Drop_num==13) begin
-            G <= Drop14[num]; B <= coin13[num];
-        end else if(Drop_num==14) begin
-            G <= Drop15[num]; B <= coin14[num];
-            if(place==3 || place==2 || place==1) hit <= 1;
-            else if(place==6) begin 
-                touch3 <= 1;
-                if(touch1 == 0&&touch2 == 0&&touch4 == 0) SevenSeg = 8'b10011110;
-                else if (touch1 == 1&&touch2 == 0&&touch4 == 0) SevenSeg = 8'b00100100;
-                else if (touch1 == 0&&touch2 == 1&&touch4 == 0) SevenSeg = 8'b00100100;
-                else if (touch1 == 0&&touch2 == 0&&touch4 == 1) SevenSeg = 8'b00100100;
-                else if (touch1 == 1&&touch2 == 1&&touch4 == 0) SevenSeg = 8'b00001100;
-                else if (touch1 == 1&&touch2 == 0&&touch4 == 1) SevenSeg = 8'b00001100;
-                else if (touch1 == 0&&touch2 == 1&&touch4 == 1) SevenSeg = 8'b00001100;
-                else SevenSeg = 8'b10011000;
-            end
-        end else if(Drop_num==15) begin
-            G <= Drop16[num]; B <= coin15[num];	
-            if(place==0 || place==2 || place==1) hit <= 1;
-        end else if(Drop_num==16) 
-            G <= Drop17[num];
-        else if(Drop_num==17) 
-            G <= Drop18[num];
-        else if(Drop_num==18) 
-            G <= Drop19[num];
-    end
-
-    always@(touch1) begin 
+    if (touch1_next) begin 
         score <= score + 1;		
     end			
-
+    if (pause == 1) begin
+            // 暫停時保持中間變數不變
+        end else begin
+            // 正常更新中間變數
+            if (num >= 7)
+                num <= 0;
+            else 
+                num <= num + 1;
+            COMM <= {num, 1'b1};
+    
+            // 更新 R, G, B 的顯示狀態
+            if (place_next == 7) begin
+                R <= Move[num];
+                G <= 8'b11111111;    // 關閉綠色
+                B <= 8'b11111111;    // 關閉藍色
+            end
+            else if (place_next == 3) begin
+                R <= Move1[num];
+                G <= 8'b11111111;
+                B <= 8'b11111111;
+            end
+            else if (place_next == 5) begin
+                R <= Move2[num];
+                G <= 8'b11111111;
+                B <= 8'b11111111;
+            end
+            else if (place_next == 1) begin
+                R <= Move3[num];
+                G <= 8'b11111111;
+                B <= 8'b11111111;
+            end
+            else if (place_next == 6) begin
+                R <= Move4[num];
+                G <= 8'b11111111;
+                B <= 8'b11111111;
+            end
+            else if (place_next == 2) begin
+                R <= Move5[num];
+                G <= 8'b11111111;
+                B <= 8'b11111111;
+            end
+            else if (place_next == 4) begin
+                R <= Move6[num];
+                G <= 8'b11111111;
+                B <= 8'b11111111;
+            end
+            else if (place_next == 0) begin
+                R <= Move7[num];
+                G <= 8'b11111111;
+                B <= 8'b11111111;
+            end
+            else if (place_next == 8) begin
+                R <= Move8[num];
+                G <= 8'b11111111;
+                B <= coin15[num];
+            end
+    
+            if (Drop_num == 0) 
+                G <= Drop1[num];
+            else if (Drop_num == 1) begin 
+                G <= Drop2[num]; 
+                B <= coin1[num]; 
+            end
+            else if (Drop_num == 2) begin 
+                G <= Drop3[num]; 
+                B <= coin2[num]; 
+            end
+            else if (Drop_num == 3) begin 
+                G <= Drop4[num]; 
+                B <= coin3[num]; 
+            end
+            else if (Drop_num == 4) begin 
+                G <= Drop5[num]; 
+                B <= coin4[num]; 
+            end
+            else if (Drop_num == 5) begin 
+                G <= Drop6[num]; 
+                B <= coin5[num]; 
+            end
+            else if (Drop_num == 6) begin 
+                G <= Drop7[num]; 
+                B <= coin6[num]; 
+            end
+            else if (Drop_num == 7) begin
+                G <= Drop8[num]; 
+                B <= coin7[num];
+                if (place_next == 5 || place_next == 3 || place_next == 4) 
+                    hit_next <= 1;
+            end 
+            else if (Drop_num == 8) begin
+                G <= Drop9[num]; 
+                B <= coin8[num];
+                if (place_next == 2) begin 
+                    touch1_next <= 1;
+                    SevenSeg_calc = 8'b10011110;
+                end
+            end
+            else if(Drop_num == 9) begin
+                G <= Drop10[num]; 
+                B <= coin9[num];
+                if(place_next == 5) begin 
+                    touch4_next <= 1;
+                    if(touch1_next == 1 && touch4_next == 1) 
+                        SevenSeg_calc = 8'b00100100;
+                    else 
+                        SevenSeg_calc = 8'b10011110;
+                end
+            end 
+            else if(Drop_num == 10) begin
+                G <= Drop11[num]; 
+                B <= coin10[num];
+                if(place_next == 5 || place_next == 6 || place_next == 7) 
+                    hit_next <= 1;
+            end 
+            else if(Drop_num == 11) begin
+                G <= Drop12[num]; 
+                B <= coin11[num];
+                if(place_next == 3) begin 
+                    touch2_next <= 1;
+                    if(touch1 == 0 && touch4_next == 0) 
+                        SevenSeg_calc = 8'b10011110;
+                    else if (touch1_next == 1 && touch4_next == 0) 
+                        SevenSeg_calc = 8'b00100100;
+                    else if (touch1_next == 0 && touch4_next == 1) 
+                        SevenSeg_calc = 8'b00100100;
+                    else 
+                        SevenSeg_calc = 8'b00001100;
+                end
+            end 
+            else if(Drop_num == 12) begin
+                G <= Drop13[num]; 
+                B <= coin12[num];
+            end 
+            else if(Drop_num == 13) begin
+                G <= Drop14[num]; 
+                B <= coin13[num];
+            end 
+            else if(Drop_num == 14) begin
+                G <= Drop15[num]; 
+                B <= coin14[num];
+                if(place_next == 3 || place_next == 2 || place_next == 1) 
+                    hit_next <= 1;
+                else if(place_next == 6) begin 
+                    touch3_next <= 1;
+                    if(touch1_next == 0 && touch2_next == 0 && touch4_next == 0) 
+                        SevenSeg_calc = 8'b10011110;
+                    else if (touch1_next == 1 && touch2_next == 0 && touch4_next == 0) 
+                        SevenSeg_calc = 8'b00100100;
+                    else if (touch1_next == 0 && touch2_next == 1 && touch4_next == 0) 
+                        SevenSeg_calc = 8'b00100100;
+                    else if (touch1_next == 0 && touch2_next == 0 && touch4_next == 1) 
+                        SevenSeg_calc = 8'b00100100;
+                    else if (touch1_next == 1 && touch2_next == 1 && touch4_next == 0) 
+                        SevenSeg_calc = 8'b00001100;
+                    else if (touch1_next == 1 && touch2_next == 0 && touch4_next == 1) 
+                        SevenSeg_calc = 8'b00001100;
+                    else if (touch1_next == 0 && touch2_next == 1 && touch4_next == 1) 
+                        SevenSeg_calc = 8'b00001100;
+                    else 
+                        SevenSeg_calc = 8'b10011000;
+                end
+            end 
+            else if(Drop_num == 15) begin
+                G <= Drop16[num]; 
+                B <= coin15[num];	
+                if(place_next == 0 || place_next == 2 || place_next == 1) 
+                    hit_next <= 1;
+            end 
+            else if(Drop_num == 16) 
+                G <= Drop17[num];
+            else if(Drop_num == 17) 
+                G <= Drop18[num];
+            else if(Drop_num == 18) begin
+                G <= Drop19[num];         // 設置紅色
+                R <= 8'b11111111;         // 關閉綠色
+                B <= 8'b11111111;         // 關閉藍色/////////////////failure mode X
+            end
+        end
+    end
+	 
+	 
+	 
+	 ////////////////////////////////add double score maybe?
+  /*  always@(touch1_next) begin 
+        score <= score + 1;		
+    end			
+*/
+	 
+	 
+	 
+	 
+	 
+	 
+    // CLK_1 區塊
     always @(posedge CLK_1) begin
-        if(hit == 1 || Drop_num == 17)
-            place <= 8;
-        else if(left) begin
-            if(place==7)
-                place<=place;
-            else
-                place <= place+1;				
-        end else if(right) begin
-            if(place==0)
-                place<=place;
-            else
-                place <= place-1;				
-        end else
-            place <= place;		     
+        if (pause == 1) begin
+            // 暫停時保持 place_next 不變
+            place_next <= place_next;/////////pause showing screen 
+        end else begin
+            // 正常更新 place_next
+            if (hit_next == 1 || Drop_num == 17)
+                place_next <= 8;
+            else if (left) begin
+                if (place_next == 7)
+                    place_next <= place_next;
+                else
+                    place_next <= place_next + 1;
+            end else if (right) begin
+                if (place_next == 0)
+                    place_next <= place_next;
+                else
+                    place_next <= place_next - 1;
+            end else
+                place_next <= place_next;
+        end
     end
+	 
+	 
+	 
+	 
+	 
+	 
 
+    
+	
+	 
+	 // CLK_2 狀態更新區塊
     always @(posedge CLK_2) begin
-        if(hit == 1) begin
-            Drop_num <= 18;
-            // 遊戲失敗，蜂鳴器長響
-            buzzer <= 1;
-        end else if(Drop_num <17) 
-            Drop_num <= Drop_num+1;
-
-        if(hit == 1) 
-            seconed <= 16'b0000000000000000;
-        else 
-            seconed <= {1'b0,seconed[15:1]};
-
-        // 若成功結束(Drop_num==18 && hit==0)表示遊戲完成
-        // 在此給予短促一聲
-        if(Drop_num==18 && hit==0 && success_flag==0) begin
-            success_flag <= 1;
-            success_beep_done <= 0;
-        end
-
-        if(success_flag==1 && success_beep_done==0) begin
-            // 發出一聲短暫響聲
-            buzzer <= 1;
-            success_beep_done <= 1;
-        end else if(success_flag==1 && success_beep_done==1) begin
-            // 下一個CLK_2週期關閉蜂鳴器
+        if (reset) begin
+            // 初始化狀態
+            place <= 3;
+            score <= 0;
+            hit <= 0;
+            Drop_num <= 0;
+            touch1 <= 0;
+            touch2 <= 0;
+            touch3 <= 0;
+            touch4 <= 0;
+            seconed <= 8'b11111111;
+            SevenSeg <= 8'b00000010;
             buzzer <= 0;
+        end else if (pause == 1) begin
+            // 暫停時保持所有狀態不變
+        end else begin
+            // 正常更新狀態
+            if (hit == 1) begin
+                Drop_num <= 18;
+                buzzer <= 1;
+            end else if (Drop_num < 17) begin
+                Drop_num <= Drop_num + 1;
+            end
+
+            if (hit == 1)
+                seconed <= 8'b00000000;
+            else
+                seconed <= {1'b0, seconed[7:1]};
+
+            // 更新輸出
+            SevenSeg <= SevenSeg_calc;
+            place <= place_next;
+            hit <= hit_next;
+            touch1 <= touch1_next;
+            touch2 <= touch2_next;
+            touch3 <= touch3_next;
+            touch4 <= touch4_next;
         end
     end
+		
+		
+		 /*
 
+		always @(posedge CLK_2) begin
+    if (reset) begin
+        // 初始化狀態
+        place <= 3;
+        score <= 0;
+        hit <= 0;
+        Drop_num <= 0;
+        touch1 <= 0;
+        touch2 <= 0;
+        touch3 <= 0;
+        touch4 <= 0;
+        seconed <= 8'b11111111; // 初始化為全亮
+        SevenSeg <= 8'b00000010;
+        buzzer <= 0;
+        phase <= 0;              // 初始化為逐個熄滅階段
+        shift_counter <= 0;      // 重置計數器
+    end else if (pause == 1) begin
+        // 暫停時保持所有狀態不變
+    end else begin
+        // 正常更新狀態
+        if (hit == 1) begin
+            Drop_num <= 18;
+            buzzer <= 1;
+            seconed <= 8'b00000000; // 碰撞時所有 LED 熄滅
+            phase <= 0;               // 重置為逐個熄滅階段
+            shift_counter <= 0;       // 重置計數器
+        end else if (Drop_num < 17) begin
+            Drop_num <= Drop_num + 1;
+        end
+
+        // LED 控制邏輯
+        if (hit != 1) begin
+            if (phase == 0) begin
+                // 逐個熄滅階段
+                if (shift_counter < 8) begin
+                    seconed <= {1'b0, seconed[7:1]}; // 右移，熄滅一個 LED
+                    shift_counter <= shift_counter + 1;
+                end
+                if (shift_counter == 7) begin
+                    phase <= 1;              // 切換到逐個亮起階段
+                    shift_counter <= 0;      // 重置計數器
+                end
+            end else if (phase == 1) begin
+                // 逐個亮起階段
+                if (shift_counter < 8) begin
+                    seconed <= {seconed[6:0], 1'b1}; // 左移，亮起一個 LED
+                    shift_counter <= shift_counter + 1;
+                end
+                if (shift_counter == 7) begin
+                    phase <= 0;              // 切換回逐個熄滅階段
+                    shift_counter <= 0;      // 重置計數器
+                end
+            end
+        end
+
+        // 更新輸出
+        SevenSeg <= SevenSeg_calc;
+        place <= place_next;
+        hit <= hit_next;
+        touch1 <= touch1_next;
+        touch2 <= touch2_next;
+        touch3 <= touch3_next;
+        touch4 <= touch4_next;
+    end
+end
+*/
 		
 		
 	
 endmodule
 
-module divfreq(input CLK, output reg CLK_div); 
-	reg [24:0] Count; 
-	always @(posedge CLK) 
-		begin 
-			if(Count > 10000) 
-				begin 
-					Count <= 25'b0; 
-					CLK_div <= ~CLK_div; 
-				end 
-			else Count <= Count + 1'b1; 
-		end 
+
+
+
+module divfreq(
+    input CLK,
+    input [24:0] div_count, // 新增分頻計數輸入
+    output reg CLK_div
+); 
+    reg [24:0] Count; 
+    always @(posedge CLK) begin 
+        if (Count >= div_count) begin 
+            Count <= 25'b0; 
+            CLK_div <= ~CLK_div; 
+        end else begin 
+            Count <= Count + 1'b1; 
+        end 
+    end 
 endmodule
+
+
+
+
 
 module CLK_one(input CLK, output reg CLK_1); 
 	reg [24:0] Count; 
@@ -560,15 +951,18 @@ module CLK_one(input CLK, output reg CLK_1);
 endmodule
 
 
-module CLK_two(input CLK, output reg CLK_2); 
-	reg [24:0] Count; 
-	always @(posedge CLK) 
-		begin 
-			if(Count >= 25000000) 
-				begin 
-					Count <= 25'b0; 
-					CLK_2<= ~CLK_2; 
-				end 
-			else Count <= Count + 1'b1; 
-		end 
+module CLK_two(
+    input CLK,
+    input [24:0] div_count, // 新增分頻計數輸入
+    output reg CLK_2
+); 
+    reg [24:0] Count; 
+    always @(posedge CLK) begin 
+        if (Count >= div_count) begin 
+            Count <= 25'b0; 
+            CLK_2 <= ~CLK_2; 
+        end else begin 
+            Count <= Count + 1'b1; 
+        end 
+    end 
 endmodule
