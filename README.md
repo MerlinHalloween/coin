@@ -39,3 +39,8 @@ more explanation about the basic function of normal coin game should have,refer 
 
 reference:
 https://github.com/joe0411/final-1
+
+
+
+PIN number assign
+![(https://raw.githubusercontent.com/MerlinHalloween/coin/refs/heads/main/16528.jpg)]
