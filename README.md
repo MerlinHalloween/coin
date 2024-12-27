@@ -98,6 +98,11 @@
 
 
 
+![特別鳴謝](https://raw.githubusercontent.com/MerlinHalloween/coin/refs/heads/main/image.png)
+
+
+
+
 
 [https://youtu.be/atA9PljkhF8](https://youtu.be/b9Tf317bIJk)
 
