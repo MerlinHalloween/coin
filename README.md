@@ -6,11 +6,13 @@
 ---
 
 ## 簡介
-此專案是一個基於 FPGA 的閃避遊戲，透過 8x8 LED 矩陣、七段顯示器以及開關進行操作。遊戲特色包含玩家控制角色、掉落障礙物及金幣收集。此版本包含多項改進，例如新增暫停、重新開始、難度調整及增強的視覺聽覺互動效果。
+此專案是一個基於 FPGA 的閃避遊戲，透過 8x8 LED 矩陣、七段顯示器以及開關進行操作。遊戲特色包含玩家控制角色、掉落障礙物及金幣收集。此版本包含多項改進，例如蜂鳴器、新增暫停、重新開始、難度調整及增強的視覺聽覺互動特效效果。
 
 ### 遊戲展示
 [點擊觀看遊戲示範影片](https://youtu.be/b9Tf317bIJk)
-![我的游戲不錯吧！！？！](https://raw.githubusercontent.com/MerlinHalloween/coin/refs/heads/main/16528.jpg)https://raw.githubusercontent.com/MerlinHalloween/coin/refs/heads/main/image.png
+
+![我的遊戲不錯吧？！](https://raw.githubusercontent.com/MerlinHalloween/coin/refs/heads/main/image.png)
+
 ---
 
 ## 輸入/輸出元件
@@ -93,6 +95,8 @@
 
 ## 參考
 [原始專案 Joe0411](https://github.com/joe0411/final-1)
+
+
 
 
 [https://youtu.be/atA9PljkhF8](https://youtu.be/b9Tf317bIJk)
