@@ -11,7 +11,7 @@
 ### 遊戲展示
 [點擊觀看遊戲示範影片](https://youtu.be/b9Tf317bIJk)
 
-![我的遊戲不錯吧？！](https://raw.githubusercontent.com/MerlinHalloween/coin/refs/heads/main/image.png)
+![我的遊戲不錯吧？！](https://raw.githubusercontent.com/MerlinHalloween/coin/refs/heads/main/OOLF0L8.jpeg)
 
 ---
 
