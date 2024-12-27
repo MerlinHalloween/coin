@@ -97,7 +97,8 @@
 [原始專案 Joe0411](https://github.com/joe0411/final-1)
 
 
-
+---
+## 特別鳴謝助教
 ![特別鳴謝](https://raw.githubusercontent.com/MerlinHalloween/coin/refs/heads/main/image.png)
 
 
