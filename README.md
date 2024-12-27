@@ -99,7 +99,7 @@
 
 ---
 ## 特別鳴謝助教
-![特別鳴謝](https://raw.githubusercontent.com/MerlinHalloween/coin/refs/heads/main/image.png)
+![special thanks to](https://raw.githubusercontent.com/MerlinHalloween/coin/refs/heads/main/image.png)
 
 
 
