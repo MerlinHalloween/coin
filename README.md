@@ -10,7 +10,7 @@
 
 ### 遊戲展示
 [點擊觀看遊戲示範影片](https://youtu.be/b9Tf317bIJk)
-
+![我的游戲不錯吧！！？！](https://raw.githubusercontent.com/MerlinHalloween/coin/refs/heads/main/16528.jpg)https://raw.githubusercontent.com/MerlinHalloween/coin/refs/heads/main/image.png
 ---
 
 ## 輸入/輸出元件
