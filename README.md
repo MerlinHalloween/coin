@@ -142,5 +142,5 @@ https://github.com/joe0411/final-1
 
 
 PIN number assign
-![Alt Text]([https://raw.githubusercontent.com/MerlinHalloween/coin/refs/heads/main/16528.jpg])
+![Alt Text](https://raw.githubusercontent.com/MerlinHalloween/coin/refs/heads/main/16528.jpg)
 
